@@ -1,0 +1,14 @@
+version: '3.4'
+services:
+  dsa-structure-service:
+    build:
+      dockerfile: Dockerfile
+      context: .
+      target: prod
+    container_name: dsa-structure-service
+    restart: always
+    volumes:
+      - .:/usr/src/app
+      - ./lcdr:/usr/lcdr
+    ports:
+      - 3038:3000
