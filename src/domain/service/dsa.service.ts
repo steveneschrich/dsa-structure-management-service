@@ -124,9 +124,11 @@ export class DSAService {
         },
       };
 
-      const { data } = await axios.request(axiosConfig);
-      return data;
+      const response = await axios.request(axiosConfig);
+
+      return response.data;
     } catch (error) {
+      console.log(error);
       Logger.error(`DSA: Failed to get folders from endpoint: ${error}`);
     }
   }
@@ -218,6 +220,7 @@ export class DSAService {
       const { data } = await axios.request(axiosConfig);
       return data;
     } catch (error) {
+      console.log(error);
       Logger.error(`DSA: Error getting item from endpoint: ${error}`);
     }
   }
