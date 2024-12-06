@@ -53,6 +53,54 @@ export class DSAService {
     }
   }
 
+  async getCollection(name: string) {
+    try {
+      Logger.debug(`DSA: Calling get collections endpoint`);
+
+      const axiosConfig = {
+        method: 'get',
+        maxBodyLength: Infinity,
+        url: `${get(
+          'dsa.host',
+        )}/api/v1/collection?text=${name}&limit=1&offset=0&sort=name&sortdir=1`,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Girder-Token': this.girderToken,
+        },
+      };
+
+      const { data } = await axios.request(axiosConfig);
+      console.log(data);
+      return data;
+    } catch (error) {
+      Logger.error(`DSA: Failed to get collection from endpoint: ${error}`);
+    }
+  }
+
+  async createCollection(name: string) {
+    try {
+      Logger.debug(`DSA: Calling create collection endpoint`);
+      const axiosConfig = {
+        method: 'post',
+        maxBodyLength: Infinity,
+        url: `${get('dsa.host')}/api/v1/collection?name=${encodeURIComponent(
+          name,
+        )}&public=false`,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Girder-Token': this.girderToken,
+        },
+      };
+
+      const { data } = await axios.request(axiosConfig);
+      return data;
+    } catch (error) {
+      Logger.error(
+        `DSA: Failed to create collection endpoint with error: ${error}`,
+      );
+    }
+  }
+
   /**
    * Retrieves folders under a specified parent.
    * @param {string} parentType - Type of the parent (e.g., 'folder').

@@ -48,6 +48,7 @@ export class DSAStructureService {
     folderPath: string,
     parentId = get('dsa.baseCollection'),
     parentType = ParentType.COLLECTION,
+    isRootLevel = true,
   ): Promise<void> {
     const folderFiles = await fs.readdir(folderPath);
 
@@ -56,72 +57,107 @@ export class DSAStructureService {
       const stats = await fs.stat(filePath);
 
       if (stats.isDirectory()) {
-        let dsaFolder = await this.dsaService.getFolders(
-          parentType,
-          parentId,
-          file,
-        );
+        if (isRootLevel) {
+          let dsaCollection = await this.dsaService.getCollection(file);
 
-        if (dsaFolder.length === 0) {
-          dsaFolder = await this.dsaService.createFolder(
+          console.log('collection', dsaCollection);
+
+          if (dsaCollection.length === 0) {
+            dsaCollection = await this.dsaService.createCollection(file);
+            console.log(dsaCollection);
+          }
+
+          await this.readFilesInFolder(
+            filePath,
+            dsaCollection._id,
+            ParentType.COLLECTION,
+            false,
+          );
+        } else {
+          let dsaFolder = await this.dsaService.getFolders(
             parentType,
             parentId,
             file,
           );
-        } else {
-          dsaFolder = dsaFolder[0];
-        }
 
-        await this.readFilesInFolder(
-          filePath,
-          dsaFolder._id,
-          dsaFolder._modelType,
-        );
+          if (dsaFolder.length === 0) {
+            dsaFolder = await this.dsaService.createFolder(
+              parentType,
+              parentId,
+              file,
+            );
+          } else {
+            dsaFolder = dsaFolder[0];
+          }
+
+          await this.readFilesInFolder(
+            filePath,
+            dsaFolder._id,
+            dsaFolder._modelType,
+            false,
+          );
+        }
       } else {
         if (
           file !== '.DS_Store' &&
           !file.includes('~$') &&
-          !file.includes('.json')
+          !file.includes('.json') &&
+          !file.includes('_error_log')
         ) {
           if (file.endsWith('.xlsx')) {
-            const dsaFile = await this.dsaService.getItem(
-              parentId,
-              file.replace('.xlsx', '.json'),
-            );
+            try {
+              const dsaFile = await this.dsaService.getItem(
+                parentId,
+                file.replace('.xlsx', '.json'),
+              );
 
-            if (dsaFile.length !== 0) {
-              await this.dsaService.deleteItem(dsaFile[0]._id);
+              if (dsaFile.length !== 0) {
+                await this.dsaService.deleteItem(dsaFile[0]._id);
+              }
+
+              const jsonData = await this.excelService.readExcelToJson(
+                filePath,
+                file,
+              );
+
+              const jsonFilePath = filePath.replace('.xlsx', '.json');
+
+              await fs.writeFile(
+                jsonFilePath,
+                JSON.stringify(jsonData),
+                'utf8',
+              );
+
+              await this.dsaService.uploadFileToFolder(
+                parentId,
+                parentType,
+                jsonFilePath,
+                path.basename(jsonFilePath),
+                Buffer.byteLength(JSON.stringify(jsonData)),
+              );
+
+              if (jsonFilePath.includes('stain')) {
+                await this.dsaService.addFolderMetadata(parentId, {
+                  type: 'tissue_microarray_stain',
+                });
+              }
+
+              Logger.debug(`Uploaded JSON for ${file}`);
+            } catch (error) {
+              const errorLogPath = filePath.replace('.xlsx', '_error_log.txt');
+              const errorMessage = `Failed to process file: ${file}\nError: ${error.message}\nStack: ${error.stack}`;
+
+              await fs.writeFile(errorLogPath, errorMessage, 'utf8');
+
+              Logger.error(
+                `Failed to process ${file}. Error details saved to ${errorLogPath}`,
+              );
             }
-
-            const jsonData = await this.excelService.readExcelToJson(
-              filePath,
-              file,
-            );
-
-            const jsonFilePath = filePath.replace('.xlsx', '.json');
-
-            await fs.writeFile(jsonFilePath, JSON.stringify(jsonData), 'utf8');
-
-            const createdJsonItem = await this.dsaService.uploadFileToFolder(
-              parentId,
-              parentType,
-              jsonFilePath,
-              path.basename(jsonFilePath),
-              Buffer.byteLength(JSON.stringify(jsonData)),
-            );
-
-            if (jsonFilePath.includes('stain')) {
-              await this.dsaService.addFolderMetadata(parentId, {
-                type: 'tissue_microarray_stain',
-              });
-            }
-
-            Logger.debug(`Uploaded JSON for ${file}`);
           } else {
             const dsaFile = await this.dsaService.getItem(parentId, file);
 
             if (dsaFile.length === 0) {
-              const createdItem = await this.dsaService.uploadFileToFolder(
+              await this.dsaService.uploadFileToFolder(
                 parentId,
                 parentType,
                 filePath,
