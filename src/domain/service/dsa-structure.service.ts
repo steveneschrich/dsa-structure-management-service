@@ -60,10 +60,16 @@ export class DSAStructureService {
         if (isRootLevel) {
           let dsaCollection = await this.dsaService.getCollection(file);
 
-          if (dsaCollection.length === 0) {
+          console.log('collection', dsaCollection, file);
+
+          const isCollectionCreated = await dsaCollection.filter(
+            (collection) => collection.name === file,
+          );
+
+          if (isCollectionCreated.length === 0) {
             dsaCollection = await this.dsaService.createCollection(file);
           } else {
-            dsaCollection = dsaCollection[0];
+            dsaCollection = isCollectionCreated[0];
           }
 
           await this.readFilesInFolder(
