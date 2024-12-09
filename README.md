@@ -37,6 +37,7 @@ npm run start:dev
 Run the following command:
 ```bash
 docker compose -f docker-compose-prod.yml up --build -d
+docker-compose -f docker-compose-prod.yml up --build -d
 ```
 
 # Automated Image Upload Service to DSA

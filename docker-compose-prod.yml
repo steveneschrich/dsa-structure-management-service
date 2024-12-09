@@ -9,6 +9,12 @@ services:
     restart: always
     volumes:
       - .:/usr/src/app
-      - ./dsa-test-server:/usr/dsa-test-server:rw
+      - ./dsa-test-server:/app/dsa-test-server:rw
     ports:
       - 3038:3000
+    networks:
+      - dsa_structure
+
+networks:
+  dsa_structure:
+    external: true

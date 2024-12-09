@@ -20,6 +20,9 @@ COPY config/config.js /app/config/config.js
 COPY --from=dev --chown=node /app/dist/ /app/dist/
 COPY --from=prodbase --chown=node /app/node_modules/ /app/node_modules/
 
+USER root
+RUN chown -R node:node /app/dsa-test-server
+
 USER node
 CMD ["npm", "run", "start:prod"]
 EXPOSE 3000
