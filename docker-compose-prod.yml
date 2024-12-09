@@ -9,6 +9,6 @@ services:
     restart: always
     volumes:
       - .:/usr/src/app
-      - ./lcdr:/usr/lcdr
+      - ./dsa-test-server:/usr/dsa-test-server:rw
     ports:
       - 3038:3000
