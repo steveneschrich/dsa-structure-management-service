@@ -21,10 +21,5 @@ COPY --from=dev --chown=node /app/dist/ /app/dist/
 COPY --from=prodbase --chown=node /app/node_modules/ /app/node_modules/
 
 USER root
-RUN mkdir -p /app/dsa-test-server \
-    && chgrp -R 0 /app/dsa-test-server \
-    && chmod -R g+rw /app/dsa-test-server
-
-USER node
 CMD ["npm", "run", "start:prod"]
 EXPOSE 3000
