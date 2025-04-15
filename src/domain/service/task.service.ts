@@ -17,7 +17,7 @@ export class TaskService {
    */
   @Cron(CronExpression.EVERY_DAY_AT_1AM)
   async getActivitiesCron(): Promise<void> {
-    // this.logger.debug('Synchronizing Folders and Files');
-    // await this.dsaStructureService.startReading();
+    this.logger.debug('Synchronizing Folders and Files');
+    await this.dsaStructureService.startReading();
   }
 }

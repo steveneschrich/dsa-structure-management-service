@@ -5,7 +5,7 @@ import { DSAStructureService } from './domain/service/dsa-structure.service';
 export class AppController {
   constructor(private readonly dsaStructureService: DSAStructureService) {}
 
-  @Get('/files')
+  @Get('/sync-files')
   async getFiles() {
     return await this.dsaStructureService.startReading();
   }
